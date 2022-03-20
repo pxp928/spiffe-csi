@@ -6,7 +6,7 @@ DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 
 ###################################################################
-# Caution: 
+# Caution:
 #
 # This script registers the example workload with SPIRE so that it can obtain
 # an SVID from the SPIFFE Workload API. Specifically, it creates an entry that
@@ -21,20 +21,34 @@ DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
 echo "Registering node..."
 kubectl exec -it \
-    -nspire \
+    -n spire \
     deployment/spire-server -- \
     /opt/spire/bin/spire-server entry create \
         -node \
         -spiffeID spiffe://example.org/node \
         -selector k8s_psat:cluster:example-cluster
 
-echo "Registering workload..."
+echo "Registering Tekton Pipeline Controller..."
 kubectl exec -it \
-    -nspire \
+    -n spire \
     deployment/spire-server -- \
     /opt/spire/bin/spire-server entry create \
         -parentID spiffe://example.org/node \
-        -spiffeID spiffe://example.org/workload \
-        -selector k8s:ns:default
+        -spiffeID spiffe://example.org/workload/tekton-controller \
+        -selector k8s:ns:tekton-pipelines \
+        -selector k8s:pod-label:app:tekton-pipelines-controller \
+        -selector k8s:sa:tekton-pipelines-controller \
+        -admin
+
+echo "Registering Tekton Chains Controller..."
+kubectl exec -it \
+    -n spire \
+    deployment/spire-server -- \
+    /opt/spire/bin/spire-server entry create \
+        -parentID spiffe://example.org/node \
+        -spiffeID spiffe://example.org/workload/tekton-chains-controller \
+        -selector k8s:ns:tekton-chains \
+        -selector k8s:pod-label:app:tekton-chains-controller \
+        -selector k8s:sa:tekton-chains-controller
 
 echo "Done."

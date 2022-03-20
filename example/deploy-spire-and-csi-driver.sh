@@ -4,6 +4,11 @@ set -e -o pipefail
 
 DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
+echo "Create regcred secret to pull from docker hub..."
+kubectl create secret generic regcred \
+    --from-file=.dockerconfigjson=/Users/parthpatel/.docker/config.json \
+    --type=kubernetes.io/dockerconfigjson
+
 echo "Applying SPIFFE CSI Driver configuration..."
 kubectl apply -f "$DIR"/config/spiffe-csi-driver.yaml
 
@@ -13,11 +18,16 @@ kubectl apply -f "$DIR"/config/spire-namespace.yaml
 echo "Deploying SPIRE server"
 kubectl apply -f "$DIR"/config/spire-server.yaml
 echo "Waiting for SPIRE Server to deploy..."
-kubectl rollout status -nspire deployment/spire-server
+kubectl rollout status -n spire deployment/spire-server
 
 echo "Deploying SPIRE agent"
 kubectl apply -f "$DIR"/config/spire-agent.yaml
 echo "Waiting for SPIRE Agent to deploy..."
-kubectl rollout status -nspire daemonset/spire-agent
+kubectl rollout status -n spire daemonset/spire-agent
+
+#echo "Deploying SPIRE Workload registrar"
+#kubectl apply -f "$DIR"/config/spire-workload-registrar.yaml
+#echo "Waiting for SPIRE Workload registrar to deploy..."
+#kubectl rollout status -n spire deployment/spire-registrar
 
 echo "Done."
