@@ -4,11 +4,6 @@ set -e -o pipefail
 
 DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-echo "Create regcred secret to pull from docker hub..."
-kubectl create secret generic regcred \
-    --from-file=.dockerconfigjson=/Users/parthpatel/.docker/config.json \
-    --type=kubernetes.io/dockerconfigjson
-
 echo "Applying SPIFFE CSI Driver configuration..."
 kubectl apply -f "$DIR"/config/spiffe-csi-driver.yaml
 
